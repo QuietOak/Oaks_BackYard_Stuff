@@ -4,6 +4,7 @@ import json
 import time
 from datetime import datetime
 import argparse
+import re  # Import the regex module for sanitization
 
 # Configuration
 maxpage = 10000
@@ -18,6 +19,11 @@ parser = argparse.ArgumentParser(description="Backup character data by author.")
 parser.add_argument("author_name", type=str, help="The username of the author to filter by.")
 args = parser.parse_args()
 author_name = args.author_name
+
+# Function to sanitize folder names
+def sanitize_folder_name(name):
+    # Replace invalid characters with an underscore
+    return re.sub(r'[<>:"/\\|?*]', '_', name)
 
 def fetch_character_details(character_id):
     url = character_by_id_url_template.format(character_id)
@@ -86,13 +92,13 @@ def save_character_data(cursor, backup_folder):
                 for char in characters:
                     if char['Author']['username'].lower() == author_name.lower():
                         ai_display_name = char['aiDisplayName']
-                        character_id = char['id']
-                        character_folder = os.path.join(backup_folder, ai_display_name)
+                        sanitized_name = sanitize_folder_name(ai_display_name)  # Sanitize the folder name
+                        character_folder = os.path.join(backup_folder, sanitized_name)
                         os.makedirs(character_folder, exist_ok=True)
 
-                        detailed_data = fetch_character_details(character_id)
+                        detailed_data = fetch_character_details(character_id=char['id'])
                         if detailed_data:
-                            json_path = os.path.join(character_folder, f"{ai_display_name}.json")
+                            json_path = os.path.join(character_folder, f"{sanitized_name}.json")
                             with open(json_path, "w", encoding="utf-8") as file:
                                 json.dump(detailed_data, file, indent=4)
 
