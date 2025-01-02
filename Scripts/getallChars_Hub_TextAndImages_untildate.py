@@ -86,7 +86,7 @@ def save_character_data(cursor, backup_folder, target_date):
                 characters = data['result']['data']['json']['characters']
                 for char in characters:
                     created_at = datetime.strptime(char['createdAt'], "%Y-%m-%dT%H:%M:%S.%fZ").date()
-                    if created_at == target_date:
+                    if created_at >= target_date:
                         ai_display_name = char['aiDisplayName']
                         sanitized_name = sanitize_filename(ai_display_name)
                         character_id = char['id']
@@ -123,8 +123,8 @@ if __name__ == "__main__":
         print("Invalid date format. Please use mm-dd-yyyy.")
         sys.exit(1)
 
-    current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    backup_folder = f"hubbackup_all_{current_time}"
+    current_time = datetime.now().strftime("%Y-%m-%d")
+    backup_folder = f"hubbackup_all_{current_time}_{target_date}"
     os.makedirs(backup_folder, exist_ok=True)
 
     for cursor in range(0, maxpage, 50):
